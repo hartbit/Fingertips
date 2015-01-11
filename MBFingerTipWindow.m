@@ -107,7 +107,7 @@
 
 #pragma mark -
 
-- (void)setActivationMode:(MBActiovationMode)activationMode {
+- (void)setActivationMode:(MBActivationMode)activationMode {
     _activationMode = activationMode;
     [self updateFingertipsAreActive];
 }
