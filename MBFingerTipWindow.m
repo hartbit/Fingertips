@@ -58,7 +58,7 @@
 
     if (self != nil)
         [self MBFingerTipWindow_commonInit];
-    
+
     return self;
 }
 
@@ -67,10 +67,10 @@
     // This covers programmatically-created windows.
     //
     self = [super initWithFrame:rect];
-    
+
     if (self != nil)
         [self MBFingerTipWindow_commonInit];
-    
+
     return self;
 }
 
@@ -78,15 +78,17 @@
 {
     self.strokeColor = [UIColor blackColor];
     self.fillColor = [UIColor whiteColor];
-    
+
     self.touchAlpha   = 0.5;
     self.fadeDuration = 0.3;
-    
+
+    self.concernedScreens = MBScreenMirrored;
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(screenConnect:)
                                                  name:UIScreenDidConnectNotification
                                                object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(screenDisconnect:)
                                                  name:UIScreenDidDisconnectNotification
@@ -110,13 +112,13 @@
     if ( ! _overlayWindow)
     {
         _overlayWindow = [[MBFingerTipOverlayWindow alloc] initWithFrame:self.frame];
-        
+
         _overlayWindow.userInteractionEnabled = NO;
         _overlayWindow.windowLevel = UIWindowLevelStatusBar;
         _overlayWindow.backgroundColor = [UIColor clearColor];
         _overlayWindow.hidden = NO;
     }
-    
+
     return _overlayWindow;
 }
 
@@ -125,30 +127,30 @@
     if ( ! _touchImage)
     {
         UIBezierPath *clipPath = [UIBezierPath bezierPathWithRect:CGRectMake(0, 0, 50.0, 50.0)];
-        
+
         UIGraphicsBeginImageContextWithOptions(clipPath.bounds.size, NO, 0);
 
-        UIBezierPath *drawPath = [UIBezierPath bezierPathWithArcCenter:CGPointMake(25.0, 25.0) 
+        UIBezierPath *drawPath = [UIBezierPath bezierPathWithArcCenter:CGPointMake(25.0, 25.0)
                                                                 radius:22.0
                                                             startAngle:0
                                                               endAngle:2 * M_PI
                                                              clockwise:YES];
 
         drawPath.lineWidth = 2.0;
-        
+
         [self.strokeColor setStroke];
         [self.fillColor setFill];
 
         [drawPath stroke];
         [drawPath fill];
-        
+
         [clipPath addClip];
-        
+
         _touchImage = UIGraphicsGetImageFromCurrentImageContext();
-        
+
         UIGraphicsEndImageContext();
     }
-        
+
     return _touchImage;
 }
 
@@ -181,10 +183,10 @@
 
 - (void)updateFingertipsAreActive;
 {
-    if ([[[[NSProcessInfo processInfo] environment] objectForKey:@"DEBUG_FINGERTIP_WINDOW"] boolValue])
-        self.active = YES;
-    else
-        self.active = [self anyScreenIsMirrored];
+    BOOL debugEnabled = [[[[NSProcessInfo processInfo] environment] objectForKey:@"DEBUG_FINGERTIP_WINDOW"] boolValue];
+    self.active = debugEnabled ||
+        (self.activationMode == MBActivationModeAlways) ||
+        ((self.activationMode == MBActivationModeMirrored) && [self anyScreenIsMirrored]);
 }
 
 #pragma mark -
@@ -195,7 +197,7 @@
     if (self.active)
     {
         NSSet *allTouches = [event allTouches];
-        
+
         for (UITouch *touch in [allTouches allObjects])
         {
             switch (touch.phase)
@@ -211,13 +213,13 @@
                         [touchView removeFromSuperview];
                         touchView = nil;
                     }
-                    
+
                     if (touchView == nil && touch.phase != UITouchPhaseStationary)
                     {
                         touchView = [[MBFingerTipView alloc] initWithImage:self.touchImage];
                         [self.overlayWindow addSubview:touchView];
                     }
-            
+
                     if ( ! [touchView isFadingOut])
                     {
                         touchView.alpha = self.touchAlpha;
@@ -238,7 +240,7 @@
             }
         }
     }
-        
+
     [super sendEvent:event];
 
     [self scheduleFingerTipRemoval]; // We may not see all UITouchPhaseEnded/UITouchPhaseCancelled events.
@@ -251,7 +253,7 @@
 {
     if (self.fingerTipRemovalScheduled)
         return;
-    
+
     self.fingerTipRemovalScheduled = YES;
     [self performSelector:@selector(removeInactiveFingerTips) withObject:nil afterDelay:0.1];
 }
@@ -273,7 +275,7 @@
     {
         if ( ! [touchView isKindOfClass:[MBFingerTipView class]])
             continue;
-        
+
         if (touchView.shouldAutomaticallyRemoveAfterTimeout && now > touchView.timestamp + REMOVAL_DELAY)
             [self removeFingerTipWithHash:touchView.tag animated:YES];
     }
@@ -287,10 +289,10 @@
     MBFingerTipView *touchView = (MBFingerTipView *)[self.overlayWindow viewWithTag:hash];
     if ( ! [touchView isKindOfClass:[MBFingerTipView class]])
         return;
-    
+
     if ([touchView isFadingOut])
         return;
-        
+
     BOOL animationsWereEnabled = [UIView areAnimationsEnabled];
 
     if (animated)
@@ -300,11 +302,11 @@
         [UIView setAnimationDuration:self.fadeDuration];
     }
 
-    touchView.frame = CGRectMake(touchView.center.x - touchView.frame.size.width, 
-                                 touchView.center.y - touchView.frame.size.height, 
-                                 touchView.frame.size.width  * 2, 
+    touchView.frame = CGRectMake(touchView.center.x - touchView.frame.size.width,
+                                 touchView.center.y - touchView.frame.size.height,
+                                 touchView.frame.size.width  * 2,
                                  touchView.frame.size.height * 2);
-    
+
     touchView.alpha = 0.0;
 
     if (animated)
@@ -312,7 +314,7 @@
         [UIView commitAnimations];
         [UIView setAnimationsEnabled:animationsWereEnabled];
     }
-    
+
     touchView.fadingOut = YES;
     [touchView performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:self.fadeDuration];
 }

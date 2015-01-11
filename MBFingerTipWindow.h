@@ -6,6 +6,15 @@
 
 #import <UIKit/UIKit.h>
 
+
+/** Different type of actionvation modes */
+typedef NS_ENUM(NSInteger, MBActivationMode) {
+    MBActivationModeNever,
+    MBActivationModeMirrored,
+    MBActivationModeAlways
+};
+
+
 /** A MBFingerTipWindow gives you automatic presentation mode in your iOS app. Note that currently, this is only designed for the iPad 2 and iPhone 4S (or later), which feature hardware video mirroring support. This library does not do the mirroring for you!
 *
 *   Use MBFingerTipWindow in place of UIWindow and your app will automatically determine when an external screen is available. It will show every touch on-screen with a nice partially-transparent graphic that automatically fades out when the touch ends. */
@@ -25,5 +34,8 @@
 
 /** If using the default touchImage, the color with whicih to fill the shape. Defaults to white. */
 @property (nonatomic, strong) UIColor *fillColor;
+
+/** The activation mode of the touch views. */
+@property (nonatomic, assign) MBActivationMode activationMode;
 
 @end
