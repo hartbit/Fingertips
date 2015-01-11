@@ -107,6 +107,11 @@
 
 #pragma mark -
 
+- (void)setActivationMode:(MBActiovationMode)activationMode {
+    _activationMode = activationMode;
+    [self updateFingertipsAreActive];
+}
+
 - (UIWindow *)overlayWindow
 {
     if ( ! _overlayWindow)
