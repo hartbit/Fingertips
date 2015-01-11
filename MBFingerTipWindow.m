@@ -82,7 +82,7 @@
     self.touchAlpha   = 0.5;
     self.fadeDuration = 0.3;
 
-    self.concernedScreens = MBScreenMirrored;
+    self.concernedScreens = MBActivationModeMirrored;
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(screenConnect:)
